@@ -1,225 +1,79 @@
-# Keyphrase Extraction System - MDERank-RRF
+# Keyphrase Extraction System - MuSe-Rank
 
-A web-based application for extracting ordered keyphrases from documents using the MDERank-RRF (Multi-Dimensional Embedding Rank with Reciprocal Rank Fusion) algorithm.
+A web-based application for extracting ordered keyphrases from a single document using the MuSe-Rank algorithm. This system is built with Streamlit and follows an MVC (Model-View-Controller) architecture.
 
 ## 📋 Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
-- [Functional Requirements](#functional-requirements)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Architecture](#architecture)
-- [Documentation](#documentation)
 
 ## 🎯 Overview
 
-This system implements an advanced keyphrase extraction pipeline that:
-- Accepts CSV files containing documents with titles and full-text content
-- Extracts candidate phrases using POS tagging and chunking
-- Scores candidates using multiple dimensions (global, theme, position)
-- Ranks keyphrases using Reciprocal Rank Fusion (RRF)
-- Returns ordered keyphrase lists
+This system allows a user to input a document's title and content (e.g., an abstract) to extract a ranked list of keyphrases. The core logic is based on the MuSe-Rank algorithm, which involves:
+- Pre-processing the text.
+- Extracting candidate phrases using POS tagging and chunking.
+- Scoring candidates based on global, theme, and position scores.
+- Fusing these scores using Reciprocal Rank Fusion (RRF) to produce a final ranked list.
 
 ## ✨ Features
 
-1. **CSV File Upload**: Simple drag-and-drop interface for CSV files
-2. **Automatic Column Detection**: Automatically detects title and text columns
-3. **Batch Processing**: Process single or multiple documents
-4. **Ordered Results**: Keyphrases ranked by importance
-5. **Export Results**: Download extraction results as CSV
-
-## 📝 Functional Requirements
-
-The system fulfills the following functional requirements:
-
-| No | Requirement | Implementation |
-|---|---|---|
-| 1 | Perangkat lunak dapat menerima masukan berupa teks dokumen yang terdiri dari judul dan isi dokumen (full-text) | CSV upload with automatic column detection for title and text fields |
-| 2 | Perangkat lunak dapat memberikan hasil ekstraksi frasa kunci yang terurut | RRF-based ranking returns ordered keyphrases by importance |
-| 3 | Perangkat lunak dapat melakukan pembacaan file dataset | CSV file reading with pandas, supports various column name formats |
+- **Manual Text Input**: A simple UI to paste a document's title and content.
+- **Configurable Top-K**: Users can specify how many keyphrases to extract.
+- **Ranked Results**: Keyphrases are displayed in a table, sorted by relevance.
+- **Download Results**: Extracted keyphrases can be downloaded as a `.txt` file.
 
 ## 🚀 Installation
 
 ### Prerequisites
 
 - Python 3.8 or higher
-- CUDA-capable GPU (optional, for faster processing)
-- Stable internet connection (for first-time model download)
+- A stable internet connection (for the first-time model download).
 
 ### Setup
 
-1. Clone or download this repository
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2.  **Install the required dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3. **(Recommended)** Pre-download the SciBERT model to avoid waiting during first app run:
-```bash
-python download_model.py
-```
-This downloads the ~442MB model in advance. Otherwise, it will download automatically on first app run (may take 5-15 minutes).
-
-4. Download spaCy model (if using notebook):
-```bash
-python -m spacy download en_core_web_trf
-```
-
-5. Download NLTK data (automatically handled by the app, but can be done manually):
-```python
-import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
-nltk.download('stopwords')
-```
-
-### ⚠️ First-Time Download Note
-
-The SciBERT model (~442MB) is downloaded automatically on first run. This can take:
-- **5-15 minutes** on a normal connection
-- **Longer** on slow connections (100-200 KB/s)
-
-**Solutions for slow downloads:**
-1. Pre-download using `python download_model.py` (recommended)
-2. Use a faster internet connection
-3. The download will resume if interrupted (HuggingFace supports resume)
-4. Model is cached after first download - subsequent runs are instant
+3.  **Run the application:**
+    ```bash
+    streamlit run app.py
+    ```
+    The application will automatically download the required SciBERT model on the first run. This might take a few minutes.
 
 ## 💻 Usage
 
-### Running the Streamlit Application
-
-1. Start the Streamlit app:
-```bash
-streamlit run app.py
-```
-
-2. Open your browser to the URL shown (typically `http://localhost:8501`)
-
-3. Upload a CSV file with the following structure:
-   - **Required columns**: `title` (or `judul`) and `text` (or `content`, `isi`, `abstract`, `body`)
-   - **Optional**: Additional columns are preserved but not used
-
-4. Configure processing options:
-   - Number of keyphrases to extract (default: 15)
-   - Number of rows to process
-
-5. Click "Extract Keyphrases" and wait for processing
-
-6. Review results and download as CSV if needed
-
-### CSV Format Example
-
-```csv
-title,text
-"Machine Learning in Healthcare","Machine learning algorithms are transforming healthcare..."
-"Natural Language Processing","Natural language processing enables computers to understand..."
-```
-
-### Using the Jupyter Notebook
-
-1. Open `mderank-rrf (6).ipynb` in Jupyter Notebook or JupyterLab
-
-2. Run cells sequentially to:
-   - Set up the environment
-   - Load models and datasets
-   - Test the extraction pipeline
-   - Evaluate on benchmark datasets
+1.  Once the application is running, open your web browser and navigate to the local URL provided by Streamlit (usually `http://localhost:8501`).
+2.  The "Manual Input" tab will be displayed.
+3.  Fill in the "Judul Dokumen" (Document Title) and "Konten Dokumen" (Document Content) fields.
+4.  Adjust the "Jumlah frasa kunci yang diinginkan (Top-K)" to set how many keyphrases you want.
+5.  Click the "Ekstrak Frasa Kunci" button.
+6.  The results will be displayed in a table, and you will see a button to download the keyphrases.
 
 ## 🏗️ Architecture
 
-### Pipeline Overview
+The application is structured using the Model-View-Controller (MVC) pattern:
 
-```
-Input CSV
-    ↓
-Document Preprocessing
-    ↓
-Candidate Phrase Extraction (POS Tagging + Chunking)
-    ↓
-Multi-Dimensional Scoring
-    ├── Global Score (Masking-based)
-    ├── Theme Score (Title similarity)
-    └── Position Score (Document position)
-    ↓
-Reciprocal Rank Fusion (RRF)
-    ↓
-Ordered Keyphrase List
-```
+-   **Models (`app/models/`):**
+    -   `keyphrase_extractor.py`: Contains the `KeyphraseExtractor` class, which implements the core MuSe-Rank algorithm.
+    -   `model_loader.py`: Handles the download and caching of the SciBERT model and tokenizer.
 
-### Key Components
+-   **Views (`app/views/`):**
+    -   `manual_tab_view.py`: The `ManualInputTab` class, which is responsible for rendering the Streamlit UI components for the manual input form.
 
-1. **Preprocessing**: Text normalization, cleaning, case folding
-2. **Candidate Extraction**: NP chunking with POS tagging, lemmatization, deduplication
-3. **Scoring**: Three-dimensional scoring using SciBERT embeddings
-4. **Ranking**: RRF combines multiple ranking signals
-5. **Output**: Ordered list of keyphrases
+-   **Controllers (`app/controllers/`):**
+    -   `main_controller.py`: The `MainController` class, which initializes the application, loads the model, and connects the model (extractor) with the view (UI).
 
-## 📚 Documentation
-
-### Code Documentation Standards
-
-This project follows FAANG SWE documentation standards:
-
-- **Module-level docstrings**: Describe purpose, usage, and key functions
-- **Function docstrings**: Include Args, Returns, Raises sections
-- **Inline comments**: Explain complex logic and algorithms
-- **Type hints**: Where applicable for better code clarity
-
-### Notebook Structure
-
-The notebook (`mderank-rrf (6).ipynb`) is organized into sections:
-
-1. **Environment Setup**: Library installation and configuration
-2. **Model Loading**: SciBERT model and dataset loading
-3. **Utility Functions**: Text preprocessing and helper functions
-4. **Candidate Extraction**: Phrase extraction algorithms
-5. **Scoring Functions**: Multi-dimensional scoring implementation
-6. **RRF Implementation**: Reciprocal Rank Fusion algorithm
-7. **Evaluation**: Metrics calculation and analysis
-8. **Pipeline**: End-to-end processing functions
-
-Each section includes:
-- Clear section headers
-- Function documentation
-- Usage examples
-- Test cases
-
-## 🔧 Technical Details
-
-### Models Used
-
-- **SciBERT**: `allenai/scibert_scivocab_uncased` for text embeddings
-- **spaCy**: `en_core_web_trf` for POS tagging (notebook only)
-
-### Algorithms
-
-- **Candidate Extraction**: Regex-based NP chunking with grammar rules
-- **Global Score**: Masking-based importance using cosine similarity
-- **Theme Score**: Title-phrase similarity using CLS token embeddings
-- **Position Score**: Inverse position weighting
-- **RRF**: Reciprocal Rank Fusion with k=40-60
-
-### Performance
-
-- Processing time: ~2-5 seconds per document (GPU) or ~10-20 seconds (CPU)
-- Memory usage: ~2-4 GB (depends on batch size)
-- Accuracy: See notebook evaluation results
-
-## 📄 License
-
-This project is for academic/research purposes.
-
-## 👥 Authors
-
-Keyphrase Extraction System - MDERank-RRF Implementation
-
-## 🙏 Acknowledgments
-
-- SciBERT model by AllenAI
-- Inspec dataset for evaluation
-- HuggingFace Transformers library
-
+-   **Main Entrypoints:**
+    -   `app.py`: The main script to run the Streamlit application. It initializes and runs the `MainController`.
+    -   `app/main.py`: Sets up the application environment and starts the `MainController`.
