@@ -17,7 +17,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'app')))
 
 # Import the main App class from the refactored application structure
-from main import App
+from app.main import App
 
 if __name__ == "__main__":
     # Create an instance of the main application class
