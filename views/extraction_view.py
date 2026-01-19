@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
-from app.models.keyphrase_extractor import KeyphraseExtractor
 
-class ManualInputTab:
+
+class ExtractionView:
     """
-    Manages the UI and logic for the manual text input tab, following UC-01.
+    Manages the UI and logic for the manual text input tab, interacting only with the Controller.
     """
-    def __init__(self, extractor: KeyphraseExtractor):
+    def __init__(self, controller):
         """
-        Initializes the tab with a KeyphraseExtractor instance.
+        Initializes the view with the MainController instance.
         """
-        self.extractor = extractor
+        self.controller = controller
 
     def render(self):
         """
@@ -66,8 +66,8 @@ class ManualInputTab:
                 # Menyiapkan data untuk ekstraksi
                 title_to_use = title.strip() if title.strip() else None
                 
-                # Memanggil model untuk ekstraksi
-                keyphrase_results = self.extractor.extract(
+                # Memanggil controller untuk ekstraksi
+                keyphrase_results = self.controller.process_extraction(
                     document_text=content,
                     title=title_to_use,
                     top_k=top_k

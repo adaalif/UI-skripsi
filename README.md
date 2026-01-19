@@ -47,7 +47,7 @@ This system allows a user to input a document's title and content (e.g., an abst
 
 3.  **Run the application:**
     ```bash
-    streamlit run app.py
+    streamlit run main.py
     ```
     The application will automatically download the required SciBERT model on the first run. This might take a few minutes.
 
@@ -64,16 +64,15 @@ This system allows a user to input a document's title and content (e.g., an abst
 
 The application is structured using the Model-View-Controller (MVC) pattern:
 
--   **Models (`app/models/`):**
-    -   `keyphrase_extractor.py`: Contains the `KeyphraseExtractor` class, which implements the core MuSe-Rank algorithm.
+-   **Models (`models/`):**
+    -   `keyphrase_model.py`: Contains the `KeyphraseModel` class, which implements the core MuSe-Rank algorithm.
     -   `model_loader.py`: Handles the download and caching of the SciBERT model and tokenizer.
 
--   **Views (`app/views/`):**
-    -   `manual_tab_view.py`: The `ManualInputTab` class, which is responsible for rendering the Streamlit UI components for the manual input form.
+-   **Views (`views/`):**
+    -   `extraction_view.py`: The `ExtractionView` class, which is responsible for rendering the Streamlit UI components and delegating actions to the Controller.
 
--   **Controllers (`app/controllers/`):**
+-   **Controllers (`controllers/`):**
     -   `main_controller.py`: The `MainController` class, which initializes the application, loads the model, and connects the model (extractor) with the view (UI).
 
--   **Main Entrypoints:**
-    -   `app.py`: The main script to run the Streamlit application. It initializes and runs the `MainController`.
-    -   `app/main.py`: Sets up the application environment and starts the `MainController`.
+-   **Main Entrypoint:**
+    -   `main.py`: The main entry point to run the Streamlit application.

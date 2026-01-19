@@ -33,7 +33,7 @@ except LookupError:
     nltk.download('stopwords', quiet=True)
 
 
-class KeyphraseExtractor:
+class KeyphraseModel:
     """
     A class to encapsulate all logic for keyphrase extraction using MuSe-Rank.
     """
@@ -285,14 +285,14 @@ class KeyphraseExtractor:
             return []
         
         # Stage 3: Score Calculation
-        if status_text: status_text.text("Tahap 3/4: Menghitung skor (mungkin perlu beberapa saat)...")
+        if status_text: status_text.text("Tahap 3/4: Menghitung skor ")
         if progress_bar: progress_bar.progress(50)
         global_scores, theme_scores, position_scores = self._calculate_scores_batched(
             document_text, title, candidates, pooling_strategy='mean'
         )
         
         # Stage 4: Final Ranking
-        if status_text: status_text.text("Tahap 4/4: Memberi peringkat dan finalisasi hasil...")
+        if status_text: status_text.text("Tahap 4/4: Memberi peringkat")
         if progress_bar: progress_bar.progress(90)
         final_ranking = self._reciprocal_rank_fusion(global_scores, theme_scores, position_scores, k=40)
         

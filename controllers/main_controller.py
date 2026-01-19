@@ -1,7 +1,7 @@
 import streamlit as st
-from app.models.model_loader import load_model_and_tokenizer
-from app.models.keyphrase_extractor import KeyphraseExtractor
-from app.views.manual_tab_view import ManualInputTab
+from models.model_loader import load_model_and_tokenizer
+from models.keyphrase_model import KeyphraseModel
+from views.extraction_view import ExtractionView
 
 class MainController:
     """
@@ -19,8 +19,8 @@ class MainController:
         
         tokenizer, model, device = self._load_model()
         
-        self.extractor = KeyphraseExtractor(tokenizer, model, device)
-        self.manual_tab = ManualInputTab(self.extractor)
+        self.model = KeyphraseModel(tokenizer, model, device)
+        self.view = ExtractionView(self)
 
     @staticmethod
     def _load_model():
@@ -39,4 +39,10 @@ class MainController:
         st.title("Keyphrase Extraction System")
         st.markdown("Extract keyphrases using the MuSe-Rank algorithm via manual text input.")
 
-        self.manual_tab.render()
+        self.view.render()
+
+    def process_extraction(self, document_text, title, top_k):
+        """
+        Mediates the extraction request from the View to the Model.
+        """
+        return self.model.extract(document_text, title, top_k)
