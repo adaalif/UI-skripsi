@@ -32,12 +32,9 @@ except LookupError:
 
 
 class KeyphraseModel:
-    """
-    A class to encapsulate all logic for keyphrase extraction using MuSe-Rank.
-    """
     def __init__(self, tokenizer, model, device):
         """
-        Initializes the extractor with a pre-loaded model, tokenizer, and device.
+        inisialisasi extractor make preloaded model, tokenizer, sama device
         """
         self.tokenizer = tokenizer
         self.model = model
@@ -47,7 +44,7 @@ class KeyphraseModel:
 
     def _get_wordnet_pos(self, treebank_tag):
         """
-        Convert NLTK POS tag to WordNet POS tag for lemmatization.
+        Convert NLTK POS tag ke wordnet buat lemma
         """
         if treebank_tag.startswith('J'):
             return wordnet.ADJ
@@ -62,7 +59,7 @@ class KeyphraseModel:
 
     def _preprocess_text(self, text):
         """
-        Normalize and clean text input.
+        normalisasi dan bersihin input text
         """
         text = text.lower()
         text = re.sub(r'\s+', ' ', text.strip())
@@ -71,7 +68,7 @@ class KeyphraseModel:
 
     def _extract_candidate_phrases(self, text, min_length=1, max_length=5):
         """
-        Extract candidate keyphrases from text using POS tagging and chunking.
+        ekstract kandidate keyphrase
         """
         text = self._preprocess_text(text)
         tokens = nltk.word_tokenize(text)
@@ -120,7 +117,7 @@ class KeyphraseModel:
 
     def _get_pooled_embeddings_batched(self, texts, BATCH_SIZE=64, pooling_strategy='mean'):
         """
-        Generate embeddings for a batch of texts.
+        bikin embedding
         """
         all_embeddings = []
         
@@ -145,6 +142,8 @@ class KeyphraseModel:
                     sum_embeddings = torch.sum(last_hidden_state * mask_expanded, dim=1)
                     sum_mask = torch.clamp(attention_mask.sum(dim=1), min=1e-9)
                     pooled_embeddings = sum_embeddings / sum_mask.unsqueeze(-1)
+                elif pooling_strategy == 'cls':
+                    pooled_embeddings = last_hidden_state[:, 0, :]
                 
                 all_embeddings.append(pooled_embeddings.cpu().numpy())
             
@@ -155,7 +154,7 @@ class KeyphraseModel:
 
     def _calculate_scores_batched(self, document_text, title, candidates, BATCH_SIZE=64, pooling_strategy='mean'):
         """
-        Calculate global, theme, and position scores for candidate phrases.
+        itung semua skornya 
         """
         original_text = document_text
         masked_texts = []
@@ -175,7 +174,7 @@ class KeyphraseModel:
 
         candidate_phrases = [c['phrase'] for c in candidates]
 
-        # Global Score
+        # skor global
         global_scores = {}
         try:
             texts_for_global_score = [original_text] + masked_texts
@@ -197,7 +196,7 @@ class KeyphraseModel:
         except Exception:
             global_scores = {c['phrase']: 0 for c in candidates}
 
-        # Theme Score
+        # skor tema
         theme_scores = {}
         try:
             texts_for_pooling = [title] + candidate_phrases
@@ -218,14 +217,14 @@ class KeyphraseModel:
         except Exception:
             theme_scores = {c['phrase']: 0.0 for c in candidates}
 
-        # Position Score
+        # skor posisi
         position_scores = {c['phrase']: 1 / (c['position'] + 1) for c in candidates}
         
         return global_scores, theme_scores, position_scores
 
     def _reciprocal_rank_fusion(self, global_scores, theme_scores, position_scores, k=60):
         """
-        Combine three ranking lists using Reciprocal Rank Fusion (RRF).
+        ini rrf 
         """
         all_phrases = set(global_scores.keys()) | set(theme_scores.keys()) | set(position_scores.keys())
         
@@ -254,41 +253,34 @@ class KeyphraseModel:
 
     def extract(self, document_text, title, top_k=15, progress_bar=None, status_text=None):
         """
-        Main pipeline method to extract keyphrases from a document.
-        Can optionally update Streamlit progress bar and status text elements.
+        ini kek digabung semua ke main pipelinenya 
         """
         if not document_text:
             return []
         
-        # Fallback for title
-        if not title:
-            title = " ".join(document_text.split('.')[:2])
         
-        # Stage 1: Preprocessing
+
         if status_text: status_text.text("Tahap 1/4: Pra-pemrosesan teks...")
         if progress_bar: progress_bar.progress(10)
         document_text = self._preprocess_text(document_text)
         
-        # Stage 2: Candidate Extraction
         if status_text: status_text.text("Tahap 2/4: Mencari kandidat frasa...")
         if progress_bar: progress_bar.progress(30)
         candidates = self._extract_candidate_phrases(document_text)
         if not candidates:
             return []
         
-        # Stage 3: Score Calculation
+  
         if status_text: status_text.text("Tahap 3/4: Menghitung skor ")
         if progress_bar: progress_bar.progress(50)
         global_scores, theme_scores, position_scores = self._calculate_scores_batched(
             document_text, title, candidates, pooling_strategy='mean'
         )
         
-        # Stage 4: Final Ranking
         if status_text: status_text.text("Tahap 4/4: Memberi peringkat")
         if progress_bar: progress_bar.progress(90)
-        final_ranking = self._reciprocal_rank_fusion(global_scores, theme_scores, position_scores, k=40)
+        final_ranking = self._reciprocal_rank_fusion(global_scores, theme_scores, position_scores, k=60)
         
-        # Structure the results with all component scores
         detailed_results = []
         for phrase, rrf_score in final_ranking[:top_k]:
             detailed_results.append({

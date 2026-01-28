@@ -4,12 +4,9 @@ from models.keyphrase_model import KeyphraseModel
 from views.extraction_view import ExtractionView
 
 class MainController:
-    """
-    The main controller that orchestrates the application.
-    """
     def __init__(self):
         """
-        Initializes the controller, loads the model, and sets up the view.
+        setup awal controller dan setup viewnya 
         """
         st.set_page_config(
             page_title="Keyphrase Extraction System",
@@ -25,7 +22,7 @@ class MainController:
     @staticmethod
     def _load_model():
         """
-        A static method to wrap the model loading spinner.
+        debug ini abaikan
         """
         with st.spinner("Loading model... This may take a moment on first run."):
             tokenizer, model, device = load_model_and_tokenizer()
@@ -34,7 +31,7 @@ class MainController:
 
     def run(self):
         """
-        Runs the main application loop, rendering the UI.
+        ini startnya jangan lupa bukan yang def start
         """
         st.title("Keyphrase Extraction System")
         st.markdown("Extract keyphrases using the MuSe-Rank algorithm via manual text input.")
@@ -43,6 +40,6 @@ class MainController:
 
     def process_extraction(self, document_text, title, top_k):
         """
-        Mediates the extraction request from the View to the Model.
+        view ke model 
         """
         return self.model.extract(document_text, title, top_k)
