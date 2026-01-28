@@ -4,13 +4,11 @@ from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 import nltk
-from nltk.tokenize import word_tokenize
 from nltk.tag import pos_tag
 from nltk.chunk import RegexpParser
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 
-# Download required NLTK data (this part can remain at the module level)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -76,11 +74,11 @@ class KeyphraseModel:
         Extract candidate keyphrases from text using POS tagging and chunking.
         """
         text = self._preprocess_text(text)
-        tokens = word_tokenize(text)
+        tokens = nltk.word_tokenize(text)
         pos_tags = pos_tag(tokens)
         grammar = """NP: {<NN.*|JJ>*<NN.*>}"""
-        cp = RegexpParser(grammar)
-        tree = cp.parse(pos_tags)
+        chunk_phrases = RegexpParser(grammar)
+        tree = chunk_phrases.parse(pos_tags)
         candidates = {}
         
         for subtree in tree:
@@ -142,17 +140,11 @@ class KeyphraseModel:
                 last_hidden_state = outputs.hidden_states[-2]
                 attention_mask = inputs['attention_mask']
 
-                if pooling_strategy == 'cls':
-                    pooled_embeddings = last_hidden_state[:, 0, :]
-                elif pooling_strategy == 'mean':
+                if pooling_strategy == 'mean':
                     mask_expanded = attention_mask.unsqueeze(-1).expand_as(last_hidden_state)
                     sum_embeddings = torch.sum(last_hidden_state * mask_expanded, dim=1)
                     sum_mask = torch.clamp(attention_mask.sum(dim=1), min=1e-9)
                     pooled_embeddings = sum_embeddings / sum_mask.unsqueeze(-1)
-                elif pooling_strategy == 'max':
-                    mask_expanded = attention_mask.unsqueeze(-1).expand_as(last_hidden_state)
-                    masked_hidden_state = last_hidden_state.masked_fill(mask_expanded == 0, -1e9)
-                    pooled_embeddings = torch.max(masked_hidden_state, dim=1)[0]
                 
                 all_embeddings.append(pooled_embeddings.cpu().numpy())
             
